@@ -29,5 +29,5 @@ Implementation of *Towards Better Text Understanding and Retrieval through Kerne
 
 | epochs | Precision@1 | Precision@5 | Recall@1 | Recall@5 |
 | ------ | ----------- | ----------- | -------- | -------- |
-| 1      | 0.0000      | 0.0000      | 0.0000   | 0.0000   |
-| 5      | 0.0000      | 0.0000      | 0.0000   | 0.0000   |
+| 1      | 0.1736      | 0.1517      | 0.0537   | 0.2302   |
+| 5      | 0.1471      | 0.1381      | 0.0464   | 0.2102   |

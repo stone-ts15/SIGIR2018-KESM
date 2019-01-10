@@ -5,6 +5,7 @@ import util
 import numpy as np
 import pandas as pd
 import heapq
+import warnings
 
 import torch
 from torch.autograd.variable import Variable
@@ -15,6 +16,8 @@ import sys
 data = None
 words = None
 ed = None
+
+warnings.filterwarnings('ignore')
 
 
 config = util.config_test
@@ -106,32 +109,34 @@ def test(net):
     recall_1 = np.zeros(total, dtype=np.float32)
     recall_5 = np.zeros(total, dtype=np.float32)
 
+    valid_num = 0
+
     for _, value in data.iterrows():
         # doc_E, doc_desp, doc_w
+        if len(value.all_entity) == 0:
+            precision_1[i] = 0.5
+            precision_5[i] = 0.5
+            recall_1[i] = 0.5
+            recall_5[i] = 0.5
+            i += 1
+            continue
+
+        pos_num = len(value.pos_entity)
+        if pos_num == 0:
+            precision_1[i] = 0.5
+            precision_5[i] = 0.5
+            recall_1[i] = 0.5
+            recall_5[i] = 0.5
+            i += 1
+            continue
+
+        valid_num += 1
         np_inputs = testData(value)
+
         torch_inputs = tuple(Variable(torch.from_numpy(arr)) for arr in np_inputs)
         if config['gpu']:
             torch_inputs = tuple(arr.cuda() for arr in torch_inputs)
-
-        scores = net.score(torch_inputs).cpu().numpy()
-
-        pos_num = len(value.pos_entity)
-
-        if len(value.all_entity) == 0:
-            precision_1[i] = -1.0
-            precision_5[i] = -1.0
-            recall_1[i] = -1.0
-            recall_5[i] = -1.0
-            i += 1
-            continue
-
-        if pos_num == 0:
-            precision_1[i] = 0.0
-            precision_5[i] = 0.0
-            recall_1[i] = 1.0
-            recall_5[i] = 1.0
-            i += 1
-            continue
+        scores = net.score(*torch_inputs).cpu().numpy()
 
         if value.all_entity[scores.argmax()] in value.pos_entity:
             precision_1[i] = 1.0
@@ -150,6 +155,9 @@ def test(net):
         recall_5[i] = right / float(pos_num) if pos_num != 0 else 1.0
 
         i += 1
+        del np_inputs
+
+    print('Valid examples: %d' % valid_num)
 
     return precision_1, precision_5, recall_1, recall_5
 
@@ -173,6 +181,7 @@ def eval_model(epochs):
         p1, p5, r1, r5 = (np.mean(x) for x in test(net))
 
         print('Epoch %d: P@1 = %.4f, P@5 = %.4f, R@1 = %.4f, R@5 = %.4f' % (epoch, p1, p5, r1, r5))
+        torch.cuda.empty_cache()
 
 
 if __name__ == '__main__':
