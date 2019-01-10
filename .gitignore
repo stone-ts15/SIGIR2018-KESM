@@ -1,0 +1,11 @@
+.idea/
+__pycache__/
+data/*.csv
+data/*.txt
+oldfile/
+trained_models/*
+word2vec-master/
+*.json
+*.rar
+*.out
+*.zip
