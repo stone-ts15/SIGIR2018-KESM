@@ -3,7 +3,7 @@ __pycache__/
 data/*.csv
 data/*.txt
 oldfile/
-trained_models/*
+trained_models/oldmodel
 word2vec-master/
 *.json
 *.rar
