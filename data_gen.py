@@ -460,36 +460,3 @@ if __name__ == '__main__':
     arglis = sys.argv[1:]
     arglis = tuple(arglis)
     data_prepare(*arglis)
-
-    # python
-
-"""
-data_gen.preoprocess(True)
-data_gen.reformatFile(path)
-data_gen.readSupplyData(path)
-data_gen.addDescription(path)
-
-#data_gen.save()
-data_gen.saveForWord2Vec(path)
-
-bash getWords.sh path1 path2
-
-#data_gen.data = pd.read_csv('data.csv')
-#data_gen.entity_description = pd.read_csv('entity_description.csv')
-#data_gen.entity_description = data_gen.entity_description.set_index('0')
-
-#data_gen.entities = pd.read_csv('entity.csv')
-
-data_gen.readVectors()
-
-#words = pd.read_csv('words.csv')
-# words = words.set_index('0')
-
-
-
-ed = pd.read_csv('entity_description.csv')
-ed.set_index('0')
-
-data = data.read_csv('data.csv')
-
-"""

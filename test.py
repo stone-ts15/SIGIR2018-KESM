@@ -115,6 +115,8 @@ def test(net):
 
         scores = net.score(torch_inputs).cpu().numpy()
 
+        pos_num = len(value.pos_entity)
+
         if len(value.all_entity) == 0:
             precision_1[i] = -1.0
             precision_5[i] = -1.0
@@ -123,7 +125,7 @@ def test(net):
             i += 1
             continue
 
-        if len(value.pos_entity) == 0:
+        if pos_num == 0:
             precision_1[i] = 0.0
             precision_5[i] = 0.0
             recall_1[i] = 1.0
@@ -133,7 +135,7 @@ def test(net):
 
         if value.all_entity[scores.argmax()] in value.pos_entity:
             precision_1[i] = 1.0
-            recall_1[i] = 1.0 / float(len(value.pos_entity)) if len(value.pos_entity) != 0 else 1.0
+            recall_1[i] = 1.0 / float(pos_num) if pos_num != 0 else 1.0
         else:
             precision_1[i] = 0.0
             recall_1[i] = 0.0
@@ -145,7 +147,7 @@ def test(net):
                 right += 1
 
         precision_5[i] = right / 5.0
-        recall_5[i] = right / float(len(value.pos_entity)) if len(value.pos_entity) != 0 else 1.0
+        recall_5[i] = right / float(pos_num) if pos_num != 0 else 1.0
 
         i += 1
 

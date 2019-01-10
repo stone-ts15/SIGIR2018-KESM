@@ -15,7 +15,7 @@ Implementation of *Towards Better Text Understanding and Retrieval through Kerne
 ## Modification
 
 - Add *BN* layer to *CNN* part in KEE, since entities' distribution from different articles may vary.
-- Add *tanh* to KESM network's output to force the output to fall in $[-1, 1]$.
+- Add *tanh* to KESM network's output to force the output to fall in [-1, 1].
 
 ## Training
 
