@@ -104,30 +104,37 @@ def test(net):
 
     i = 0
     total = len(data)
-    precision_1 = np.zeros(total, dtype=np.float32)
-    precision_5 = np.zeros(total, dtype=np.float32)
-    recall_1 = np.zeros(total, dtype=np.float32)
-    recall_5 = np.zeros(total, dtype=np.float32)
+    # precision_1 = np.zeros(total, dtype=np.float32)
+    # precision_5 = np.zeros(total, dtype=np.float32)
+    # recall_1 = np.zeros(total, dtype=np.float32)
+    # recall_5 = np.zeros(total, dtype=np.float32)
+
+    precision_1 = []
+    precision_5 = []
+    recall_1 = []
+    recall_5 = []
 
     valid_num = 0
 
     for _, value in data.iterrows():
         # doc_E, doc_desp, doc_w
         if len(value.all_entity) == 0:
-            precision_1[i] = 0.5
-            precision_5[i] = 0.5
-            recall_1[i] = 0.5
-            recall_5[i] = 0.5
-            i += 1
+            # precision_1[i] = 0.5
+            # precision_5[i] = 0.5
+            # recall_1[i] = 0.5
+            # recall_5[i] = 0.5
+            # i += 1
+            print('no e')
             continue
 
         pos_num = len(value.pos_entity)
         if pos_num == 0:
-            precision_1[i] = 0.5
-            precision_5[i] = 0.5
-            recall_1[i] = 0.5
-            recall_5[i] = 0.5
-            i += 1
+            # precision_1[i] = 0.5
+            # precision_5[i] = 0.5
+            # recall_1[i] = 0.5
+            # recall_5[i] = 0.5
+            # i += 1
+            print('no pos')
             continue
 
         valid_num += 1
@@ -139,11 +146,15 @@ def test(net):
         scores = net.score(*torch_inputs).cpu().numpy()
 
         if value.all_entity[scores.argmax()] in value.pos_entity:
-            precision_1[i] = 1.0
-            recall_1[i] = 1.0 / float(pos_num) if pos_num != 0 else 1.0
+            precision_1.append(1)
+            recall_1.append(1 / pos_num)
+            # precision_1[i] = 1.0
+            # recall_1[i] = 1.0 / float(pos_num) if pos_num != 0 else 1.0
         else:
-            precision_1[i] = 0.0
-            recall_1[i] = 0.0
+            precision_1.append(0)
+            recall_1.append(0)
+            # precision_1[i] = 0.0
+            # recall_1[i] = 0.0
 
         top_5 = heapq.nlargest(5, range(len(scores)), scores.take)
         right = 0
@@ -151,34 +162,44 @@ def test(net):
             if value.all_entity[pos] in value.pos_entity:
                 right += 1
 
-        precision_5[i] = right / 5.0
-        recall_5[i] = right / float(pos_num) if pos_num != 0 else 1.0
+        precision_5.append(right / 5)
+        recall_5.append(right / pos_num)
+        # precision_5[i] = right / 5.0
+        # recall_5[i] = right / float(pos_num) if pos_num != 0 else 1.0
 
         i += 1
         del np_inputs
 
     print('Valid examples: %d' % valid_num)
 
-    return precision_1, precision_5, recall_1, recall_5
+    return tuple(np.mean(x) for x in (precision_1, precision_5, recall_1, recall_5))
+
+    # return precision_1, precision_5, recall_1, recall_5
 
 
 def eval_model(epochs):
     net = models.KESMSalienceEstimation(config['esize'], config['wsize'], None, config['keesize'], config['L'],
-                                 config['cnn_ksize'], config['K'], config['cos_epsilon'])
-    data_gen.prepare('data_test/articles_testset.csv', 'data_test/entities_testset.csv',
-                     'data_test/reformat_testset.json', 'data_all/maps.txt', 'data_all/w2v_vec')
+                                 config['cnn_ksize'], config['K'], config['cos_epsilon'], config['dropout_p'])
+    # data_gen.prepare('data_test/articles_testset.csv', 'data_test/entities_testset.csv',
+    #                  'data_test/reformat_testset.json', 'data_all/maps.txt', 'data_all/w2v_vec')
+
+    key = 'test'
+
+    data_gen.prepare('data_%s/articles_%sset.csv' % (key, key), 'data_%s/entities_%sset.csv' % (key, key),
+                     'data_%s/reformat_%sset.json' % (key, key), 'data_all/maps.txt', 'data_all/w2v_vec')
 
     print('Testing model %s' % config['model_prefix'])
     for epoch in epochs:
         model_name = '%s_%d.pth' % (config['model_prefix'], epoch)
-        net.load_state_dict(torch.load(config['model_dir'] + '/' + model_name))
+        # net.load_state_dict(torch.load(config['model_dir'] + '/' + model_name))
         if config['gpu']:
             net.cuda()
         for param in net.parameters():
             param.requires_grad = False
         net.eval()
 
-        p1, p5, r1, r5 = (np.mean(x) for x in test(net))
+        p1, p5, r1, r5 = test(net)
+        # p1, p5, r1, r5 = (np.mean(x) for x in test(net))
 
         print('Epoch %d: P@1 = %.4f, P@5 = %.4f, R@1 = %.4f, R@5 = %.4f' % (epoch, p1, p5, r1, r5))
         torch.cuda.empty_cache()

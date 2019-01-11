@@ -11,6 +11,7 @@ config_train = {
     'cnn_ksize': 3,
     'K': 11,
     'cos_epsilon': 1e-6,
+    'dropout_p': 0.4,
 
     'gpu': True,
     'optim': 'Adam',
@@ -21,7 +22,7 @@ config_train = {
     'dec_lr_epoch': 20,
     'dec_lr_avg_loss': 0.02,
     'model_dir': 'trained_models',
-    'model_prefix': 'trainset_bn_tanh_adam_batch128',
+    'model_prefix': 'trainset_bn_tanh_adam_batch128_drop',
     'batch_size': 128,
     'use_pretrained_model': False
 }
@@ -34,10 +35,11 @@ config_test = {
     'cnn_ksize': 3,
     'K': 11,
     'cos_epsilon': 1e-6,
+    'dropout_p': 0.4,
 
     'gpu': True,
     'model_dir': 'trained_models',
-    'model_prefix': 'trainset_bn_tanh_adam_batch128'
+    'model_prefix': 'trainset_bn_tanh_adam_batch128_drop'
 }
 
 

@@ -54,7 +54,7 @@ def get_optimizer(params, opttype, lr):
 
 def train():
     net = KESMSalienceEstimation(config['esize'], config['wsize'], None, config['keesize'], config['L'],
-                                 config['cnn_ksize'], config['K'], config['cos_epsilon'])
+                                 config['cnn_ksize'], config['K'], config['cos_epsilon'], config['dropout_p'])
 
     # prepare data generator
     # data_gen.prepare('oldfile/d10000-aa', 'oldfile/div10000-aa.json', 'oldfile/maps.txt', 'oldfile/w2v_vec')

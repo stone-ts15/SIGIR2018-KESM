@@ -10,7 +10,7 @@ class KnowledgeEnrichedEmbedding(nn.Module):
     # w_out_channels is number of channels of cnn output, not specified in paper.
     # it seems its value should be set to wsize, but actually whatever can.
     # doesn't matter.
-    def __init__(self, entity_size=128, word_size=128, word_out_channels=None, enriched_vector_size=128, word_num=20, conv_kernel_size=3):
+    def __init__(self, entity_size=128, word_size=128, word_out_channels=None, enriched_vector_size=128, word_num=20, conv_kernel_size=3, dropout_p=0.4):
         super(KnowledgeEnrichedEmbedding, self).__init__()
 
         self.e_size = entity_size
@@ -23,6 +23,7 @@ class KnowledgeEnrichedEmbedding(nn.Module):
         self.bn = nn.BatchNorm2d(self.w_out_channels, eps=1e-6)
         self.maxpooling = nn.MaxPool2d((self.word_num - self.kernel_size + 1, 1))
         self.fc = nn.Linear(self.e_size + self.w_size, self.ve_size, bias=False)
+        self.dropout = nn.Dropout(dropout_p)
 
     def forward(self, *inputs):
         entities, words = inputs
@@ -39,7 +40,7 @@ class KnowledgeEnrichedEmbedding(nn.Module):
         flattened = pooled.reshape((batch_size, -1, self.w_out_channels))  # flattened: [batch, n, out_channels]
         concat = torch.cat([entities, flattened], 2)  # concat: [batch, n, esize + out_channels]
 
-        out = self.fc(concat)  # out: [batch, n, keesize]
+        out = self.dropout(self.fc(concat))  # out: [batch, n, keesize]
         return out
 
 
@@ -84,11 +85,12 @@ class KernelInteractionModel(nn.Module):
 
 
 class KESMSalienceEstimation(nn.Module):
-    def __init__(self, entity_size=128, word_size=128, word_out_channels=None, enriched_vector_size=128, word_num=20, conv_kernel_size=3, K=11, epsilon=1e-6):
+    def __init__(self, entity_size=128, word_size=128, word_out_channels=None, enriched_vector_size=128, word_num=20, conv_kernel_size=3, K=11, epsilon=1e-6, dropout_p=0.4):
         super(KESMSalienceEstimation, self).__init__()
-        self.KEE = KnowledgeEnrichedEmbedding(entity_size, word_size, word_out_channels, enriched_vector_size, word_num, conv_kernel_size)
+        self.KEE = KnowledgeEnrichedEmbedding(entity_size, word_size, word_out_channels, enriched_vector_size, word_num, conv_kernel_size, dropout_p)
         self.KIM = KernelInteractionModel(K, epsilon)
         self.fc = nn.Linear(2*K, 1, bias=True)
+        self.dropout = nn.Dropout(dropout_p)
 
     def score(self, *inputs):
         doc_E, doc_description, doc_W = inputs
@@ -141,8 +143,8 @@ class KESMSalienceEstimation(nn.Module):
         pos_Phi = self.KIM(pos_KEE, doc_KEE, doc_W)  # pos_Phi: [batch, 2K]
         neg_Phi = self.KIM(neg_KEE, doc_KEE, doc_W)  # neg_Phi: [batch, 2K]
 
-        out_pos = self.fc(pos_Phi)  # pos_out: [batch, 1]
-        out_neg = self.fc(neg_Phi)  # neg_out: [batch, 1]
+        out_pos = self.dropout(self.fc(pos_Phi))  # pos_out: [batch, 1]
+        out_neg = self.dropout(self.fc(neg_Phi))  # neg_out: [batch, 1]
 
         out_pos = torch.tanh(out_pos)  # pos_out: [batch, 1]
         out_neg = torch.tanh(out_neg)  # neg_out: [batch, 1]
